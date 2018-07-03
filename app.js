@@ -27,19 +27,34 @@ function parseCoordinates(coordinates) {
 
 app.get('/route/:coordinates', function(req, res) {
 
+	console.log("optimize: ", req.query.optimize)
+
 	try {
 		coordinates = parseCoordinates(req.params.coordinates)
 	} catch (err) {
 		return res.json({"error": err});
 	}
 
-	osrm.route({
-		coordinates: coordinates,
-		steps: true
-	}, function(err, result) {
-		if (err) return res.json({"error":err.message});
-        return res.json(result);
-	});
+	if (req.query.optimize) {
+		osrm.trip({
+			coordinates: coordinates,
+			roundtrip: false,
+			source: 'first',
+			destination: 'last',
+			steps: true
+		}, function(err, result) {
+			if (err) return res.json({"error":err.message});
+	        return res.json(result);
+		});
+	} else {
+		osrm.route({
+			coordinates: coordinates,
+			steps: true
+		}, function(err, result) {
+			if (err) return res.json({"error":err.message});
+	        return res.json(result);
+		});
+	}
 })
 
 app.get('/table/:coordinates', function(req, res) {
