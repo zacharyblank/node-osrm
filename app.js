@@ -1,6 +1,7 @@
 process.env.UV_THREADPOOL_SIZE = Math.ceil(require('os').cpus().length * 1.5);
 
 var OSRM = require('osrm')
+var ortools = require('node_or_tools')
 var express = require('express')
 
 var env = require('./.env.js')
@@ -36,18 +37,58 @@ app.get('/route/:coordinates', function(req, res) {
 	}
 
 	if (req.query.optimize === 'true') {
-		osrm.trip({
+		osrm.table({
 			coordinates: coordinates,
-			roundtrip: false,
-			source: 'first',
-			destination: 'last',
-			steps: true
 		}, function(err, result) {
 			if (err) return res.json({"error":err.message});
-	        return res.json({
-	        	waypoints: result.waypoints,
-	        	routes: result.trips
-	        });
+
+			// add the dummy node			
+			var dummy = Array()
+			for (var i = 0; i < result.durations.length; i++) {
+				if (i == 0 || i == result.durations.length-1) {
+					result.durations[i].push(0)
+					dummy.push(0)
+				} else {
+					result.durations[i].push(9999999999)
+					dummy.push(9999999999)
+				}
+			}
+
+			dummy.push(0)
+			result.durations.push(dummy)
+
+			var TSP = new ortools.TSP({
+				numNodes: result.durations[0].length,
+				costs: result.durations
+			});
+
+			TSP.Solve({
+				computeTimeLimit: 10000,
+				depotNode: 0
+			}, function(err, solution) {
+
+				var ordered = Array()
+				for (var i = 0; i < solution.length; i++) {
+					ordered.push(coordinates[solution[i]-1])
+				}
+
+				// ordered.unshift(coordinates[0])
+				// ordered.push(coordinates[coordinates.length-1])
+				// console.log(ordered)
+
+				// TODO: add the first and last
+
+				osrm.route({
+					coordinates: ordered,
+					steps: true
+				}, function(err, result) {
+					if (err) return res.json({"error":err.message});
+			        return res.json({
+			        	waypoint_order: solution,
+			        	routes: result.routes
+			        });
+				});
+			})
 		});
 	} else {
 		osrm.route({

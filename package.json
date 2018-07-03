@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.3",
+    "node_or_tools": "^1.0.5",
     "osrm": "^5.18.0"
   }
 }
