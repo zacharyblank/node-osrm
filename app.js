@@ -43,19 +43,19 @@ app.get('/route/:coordinates', function(req, res) {
 			if (err) return res.json({"error":err.message});
 
 			// add the dummy node			
-			var dummy = Array()
-			for (var i = 0; i < result.durations.length; i++) {
-				if (i == 0 || i == result.durations.length-1) {
-					result.durations[i].push(0)
-					dummy.push(0)
-				} else {
-					result.durations[i].push(9999999999)
-					dummy.push(9999999999)
-				}
-			}
+			// var dummy = Array()
+			// for (var i = 0; i < result.durations.length; i++) {
+			// 	if (i == 0 || i == result.durations.length-1) {
+			// 		result.durations[i].push(0)
+			// 		dummy.push(0)
+			// 	} else {
+			// 		result.durations[i].push(9999999999)
+			// 		dummy.push(9999999999)
+			// 	}
+			// }
 
-			dummy.push(0)
-			result.durations.push(dummy)
+			// dummy.push(0)
+			// result.durations.push(dummy)
 
 			var TSP = new ortools.TSP({
 				numNodes: result.durations[0].length,
