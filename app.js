@@ -35,7 +35,7 @@ app.get('/route/:coordinates', function(req, res) {
 		return res.json({"error": err});
 	}
 
-	if (req.query.optimize) {
+	if (req.query.optimize === 'true') {
 		osrm.trip({
 			coordinates: coordinates,
 			roundtrip: false,
@@ -44,7 +44,9 @@ app.get('/route/:coordinates', function(req, res) {
 			steps: true
 		}, function(err, result) {
 			if (err) return res.json({"error":err.message});
-	        return res.json(result);
+	        return res.json({
+	        	routes: result.trips
+	        });
 		});
 	} else {
 		osrm.route({
@@ -52,7 +54,9 @@ app.get('/route/:coordinates', function(req, res) {
 			steps: true
 		}, function(err, result) {
 			if (err) return res.json({"error":err.message});
-	        return res.json(result);
+	        return res.json({
+	        	routes: result.routes
+	        });
 		});
 	}
 })
