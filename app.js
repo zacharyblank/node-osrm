@@ -45,6 +45,7 @@ app.get('/route/:coordinates', function(req, res) {
 		}, function(err, result) {
 			if (err) return res.json({"error":err.message});
 	        return res.json({
+	        	waypoints: result.waypoints,
 	        	routes: result.trips
 	        });
 		});
@@ -55,6 +56,7 @@ app.get('/route/:coordinates', function(req, res) {
 		}, function(err, result) {
 			if (err) return res.json({"error":err.message});
 	        return res.json({
+	        	waypoints: result.waypoints,
 	        	routes: result.routes
 	        });
 		});
