@@ -4,7 +4,10 @@ var OSRM = require('osrm')
 var express = require('express')
 
 var env = require('./.env.js')
-var osrm = new OSRM(env.network)
+var osrm = new OSRM({
+	path: env.network,
+	algorithm: env.algorithm
+})
 var app = express();
 
 function parseCoordinates(coordinates) {
