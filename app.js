@@ -32,18 +32,76 @@ app.get('/route/:coordinates', function(req, res) {
 	} catch (err) {
 		return res.json({"error": err});
 	}
-	
-	osrm.route({
-		coordinates: coordinates,
-		overview: 'full',
-		steps: true
-	}, function(err, result) {
-		if (err) return res.json({"error":err.message});
-        return res.json({
-        	waypoints: result.waypoints,
-        	routes: result.routes
-        });
-	});
+
+	if (req.query.optimize === 'true') {
+		osrm.table({
+			coordinates: coordinates,
+		}, function(err, result) {
+			if (err) return res.json({"error":err.message});
+
+			var end = Array()
+			result.durations.push(end)
+
+			for (var i = 0; i < result.durations.length; i++) {
+				if (i == 0 || i == result.durations.length - 1) {
+					end.push(0)
+					result.durations[i].push(0)
+				} else {
+					end.push(9999)
+					result.durations[i].push(999999999)
+				}
+			}
+
+			result.durations[result.durations.length-1] = end
+
+			var TSP = new ortools.TSP({
+				numNodes: result.durations[0].length,
+				costs: result.durations
+			});
+
+			TSP.Solve({
+				computeTimeLimit: 10000,
+				depotNode: 0
+			}, function(err, solution) {
+
+				var ordered = Array()
+				for (var i = 1; i < solution.length; i++) {
+					ordered.push(coordinates[solution[i]])
+				}
+
+				ordered.push(coordinates[coordinates.length-1])
+				ordered.unshift(coordinates[0])
+				// ordered.push(coordinates[coordinates.length-1])
+				// console.log(ordered)
+
+				// TODO: add the first and last
+
+				osrm.route({
+					coordinates: ordered,
+					overview: 'full',
+					steps: true
+				}, function(err, result) {
+					if (err) return res.json({"error":err.message});
+			        return res.json({
+			        	waypoint_order: solution,
+			        	routes: result.routes
+			        });
+				});
+			})
+		})
+	} else {
+		osrm.route({
+			coordinates: coordinates,
+			overview: 'full',
+			steps: true
+		}, function(err, result) {
+			if (err) return res.json({"error":err.message});
+	        return res.json({
+	        	waypoints: result.waypoints,
+	        	routes: result.routes
+	        });
+		});
+	}
 })
 
 app.get('/table/:coordinates', function(req, res) {
