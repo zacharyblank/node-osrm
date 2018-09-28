@@ -28,7 +28,7 @@ function parseCoordinates(coordinates) {
 
 app.get('/route/:coordinates', function(req, res) {
 	try {
-		coordinates = parseCoordinates(req.params.coordinates)
+		var coordinates = parseCoordinates(req.params.coordinates)
 	} catch (err) {
 		return res.json({"error": err});
 	}
